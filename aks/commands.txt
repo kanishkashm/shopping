@@ -1,0 +1,37 @@
+az --version
+
+az login
+
+az group create --name shoppingrg --location southeastasia
+
+az acr create --resource-group shoppingrg --name knshoppingacr --sku Basic
+
+az acr update -n knshoppingacr --admin-enabled true
+
+az acr login --name knshoppingacr
+
+az acr list --resource-group shoppingrg --query "[].{acrLoginServer:loginServer}" --output table
+
+docker tag shoppingapi:latest knshoppingacr.azurecr.io/shoppingapi:v1
+
+docker push knshoppingacr.azurecr.io/shoppingapi:v1
+
+az acr repository list --name knshoppingacr --output table
+
+az acr repository show-tags --name knshoppingacr --repository shoppingclient --output table
+
+az aks create --resource-group shoppingrg --name shoppingCluster --node-count 1 --generate-ssh-keys --attach-acr knshoppingacr
+
+az aks install-cli
+
+az aks get-credentials --resource-group shoppingrg --name shoppingCluster
+
+kubectl get context
+
+kubectl get svc
+
+kubectl describe pods
+
+kubectl scale --replicas=3 deployment.apps/shoppingclient-deployment
+
+az aks show --resource-group shoppingrg --name shoppingCluster --query kubernetesVersion --output table
